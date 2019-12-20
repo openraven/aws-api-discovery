@@ -1,0 +1,10 @@
+.idea
+target
+.project
+.settings
+.factorypath
+.classpath
+*.iml
+/*.json
+*.log
+*.out

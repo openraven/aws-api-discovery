@@ -1,0 +1,70 @@
+stages:
+  - build
+  - security
+  - build image
+  - release
+
+include:
+  - project: openraven/open/gitlab-ci
+    file: /sast-java.yml
+  - project: openraven/open/gitlab-ci
+    file: /licensecheck.yml
+
+variables:
+  DOCKER_TAG_NAME: "${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}"
+
+build jar:
+  stage: build
+  image: maven:3-jdk-11
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 day
+  cache:
+    key: v1-m2-repository
+    paths:
+    # this appears to only cache things within the workspace
+    - .m2/repository
+  script:
+  - mvn -Dmaven.repo.local=$PWD/.m2/repository -B clean package
+
+build image:
+  stage: build image
+  image:
+    name: $KANIKO_DEBUG_IMAGE
+    entrypoint:
+    - /busybox/env
+  before_script:
+  - |
+    cat >/kaniko/.docker/config.json<<JSON
+    {
+      "auths": {
+        "$CI_REGISTRY": {
+          "username": "$CI_REGISTRY_USER",
+          "password": "$CI_REGISTRY_PASSWORD"
+        }
+      }
+    }
+    JSON
+  script:
+  - >-
+    /kaniko/executor
+    --build-arg JAR_FILE=$(basename target/*.jar)
+    --verbosity=info
+    --context "$CI_PROJECT_DIR"
+    --destination "${DOCKER_TAG_NAME}"
+  variables:
+    GIT_CLEAN_FLAGS: -n
+
+release to staging:
+  stage: release
+  only:
+    refs:
+      - master
+  trigger:
+    project: openraven/open/helm-charts/helmfiles
+    strategy: depend # Add this to attempt to fail the build.
+  variables:
+    HELMFILE_NAME: 'aws-discovery-svc.yaml'
+    CHART_NAME: 'aws-discovery-svc'
+    UPSTREAM_TAG: "${CI_PIPELINE_ID}"

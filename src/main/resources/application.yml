@@ -1,0 +1,114 @@
+---
+spring:
+  profiles: default, prod
+  kafka:
+    bootstrap-servers:
+      - kafka.kafka.svc.cluster.local:9092
+---
+spring:
+  profiles: local
+  kafka:
+    bootstrap-servers:
+      - localhost:9092
+    template:
+      default-topic: DISCOVERED_AWS_ENTITIES
+management:
+  health:
+    elasticsearch:
+      enabled: false
+openraven:
+  app:
+    v1:
+      scheduling:
+        cron: "0 0 0 1 1 *"
+        configPath: "openraven/app/v1/scheduling/cron"
+        runOnStart: false
+      kafka:
+        consumer:
+          group: AWS-CONSUMERS
+          topic: DISCOVERED_AWS_ENTITIES
+        dead-letter:
+          topic: DEADLETTER_AWS_ENTITIES
+      services:
+        elastic-search:
+          port: 9200
+          host: localhost
+          protocol: http
+        analytics:
+          enabled: false
+          key: ~
+          clusterid: dev
+      cloud-ingestion:
+        integration: AWS-api
+        aws: us-west-2
+---
+spring:
+  profiles: default
+  application:
+    name: aws-discovery
+  kafka:
+    bootstrap-servers:
+      # although watch out, kafka wants to be able to contact its peers
+      # so ensure your local kafka knows what its "public ip" is
+      - localhost:9092
+    template:
+      default-topic: DISCOVERED_AWS_ENTITIES
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+openraven:
+  app:
+    v1:
+      scheduling:
+        cron: "0 0/30 * * * *"
+        configPath: "openraven/app/v1/scheduling/cron"
+        runOnStart: true
+      kafka:
+        consumer:
+          group: AWS-CONSUMERS
+          topic: DISCOVERED_AWS_ENTITIES
+        dead-letter:
+          topic: DEADLETTER_AWS_ENTITIES
+      services:
+        elastic-search:
+          port: 9200
+          host: elasticsearch-es-http.elasticsearch.svc.cluster.local
+          protocol: http
+        analytics:
+          enabled: true
+          key: ~
+          clusterid: ClientClusterID
+      cloud-ingestion:
+        integration: AWS-api
+        awsRegions: 
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-south-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - ca-central-1
+          - eu-central-1
+          - eu-north-1
+          - eu-west-1
+          - eu-west-2
+          - eu-west-3
+          - sa-east-1
+          - us-east-1
+          - us-east-2
+          - us-west-1
+          - us-west-2
+---
+spring:
+  profiles: producer
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+---
+spring:
+  profiles: consumer
+  kafka:
+    consumer:
+      group-id: AWS-CONSUMERS
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer

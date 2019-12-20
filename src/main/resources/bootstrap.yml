@@ -1,0 +1,19 @@
+---
+spring:
+  profiles: default, prod
+  cloud:
+    zookeeper:
+      connect-string: kafka-zookeeper.kafka.svc.cluster.local:2181
+      enabled: true
+---
+spring:
+  profiles: local
+  cloud:
+    zookeeper:
+      enabled: false
+---
+spring:
+  profiles: default
+  cloud:
+    zookeeper:
+      connect-string: 192.168.99.100:2181

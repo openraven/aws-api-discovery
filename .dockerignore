@@ -1,0 +1,9 @@
+/.idea
+# without these ignores, skaffold will attempt to rebuild the docker image on editing them
+# which is almost certainly not what you want
+/k8s
+*.iml
+/*.json
+/*.log
+/*.yml
+/*.yaml

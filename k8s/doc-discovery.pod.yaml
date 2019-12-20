@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: aws
+  name: doc-discovery
+spec:
+  containers:
+    - name: doc-discovery-skaffold
+      # this will be replaced by skaffold
+      image: 'docker.openraven.io/open/aws-discovery:latest'
+      imagePullPolicy: Always
+      ports:
+        - containerPort: 80
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: default,prod,producer,DOC
+        - name: GREMLIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: odb-orientdb-secret
+              key: root-password
+  # in lieu of Cron
+  restartPolicy: OnFailure

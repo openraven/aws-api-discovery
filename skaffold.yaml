@@ -1,0 +1,30 @@
+apiVersion: skaffold/v1beta13
+kind: Config
+build:
+  artifacts:
+    - image: docker.openraven.io/open/aws-discovery
+      # the tag is built by skaffold, it wants just the base name :point_up:
+      sync:
+        manual:
+          - src: target/*.jar
+            # don't put it into "/" as it takes non-zero time to transfer
+            dest: /root/
+      docker:
+        buildArgs:
+          # skaffold can read from the environment, if you find that handy
+          JAR_FILE: "{{ .JAR_FILE }}"
+portForward:
+  - resourceType: pod
+    resourceName: ec2-discovery
+    namespace: aws  #
+    port: 8080 #
+    localPort: 8080 # *Optional*
+  - resourceType: pod
+    resourceName: aws-consumer
+    namespace: aws  #
+    port: 80 #
+    localPort: 8081 # *Optional*
+  - resourceType: pod
+    namespace: odb
+    resourceName: odb-orientdb-0
+    port: 2480

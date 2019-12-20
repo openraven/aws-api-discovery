@@ -1,0 +1,88 @@
+version: '3.3'
+
+services:
+
+  zoo1:
+    image: zookeeper:3.5.7
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - "8400:8080"
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181
+    volumes:
+      - "zkdata:/data"
+      - "zkdatalog:/datalog"
+    networks:
+      - elastic
+
+  kafka1:
+    image: docker.io/bitnami/kafka:2.4.0-debian-9-r0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ADVERTISED_LISTENERS=LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://127.0.0.1:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=LISTENER_DOCKER_INTERNAL://:19092,LISTENER_DOCKER_EXTERNAL://:9092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=LISTENER_DOCKER_INTERNAL
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zoo1:2181
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_LOG4J_LOGGERS="kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    volumes:
+      - kafkadata:/var/lib/kafka/data
+    networks:
+      - elastic
+    depends_on:
+      - zoo1
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.1
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  kib01:
+    image: docker.elastic.co/kibana/kibana:7.7.1
+    container_name: kib01
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    networks:
+      - elastic
+    depends_on:
+      - es01
+
+volumes:
+  zkdata:
+  zkdatalog:
+  kafkadata:
+  data01:
+
+networks:
+  elastic:
+    driver: bridge
