@@ -1,9 +1,9 @@
 # Please read the core readme first
 https://github.com/openraven/core
 
-# AWS Discovery
+# AWS API Discovery
 
-Service to discover AWS resources and publish to Kafka+ElasticSearch
+Service to discover AWS resources using the AWS native API's and publish to Kafka+ElasticSearch
 
 ## Prerequisites
 
