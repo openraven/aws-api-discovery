@@ -1,3 +1,6 @@
+# Please read the core readme first
+https://github.com/openraven/core
+
 # AWS Discovery
 
 Service to discover AWS resources and publish to Kafka+ElasticSearch
