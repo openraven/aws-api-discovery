@@ -1,9 +1,6 @@
-# Please read the core readme first
-https://github.com/openraven/core
-
 # AWS API Discovery
 
-Service to discover AWS resources using the AWS native API's and publish to Kafka+ElasticSearch
+Service to discover AWS resources using the AWS native API's and publish to Kafka+ElasticSearch.
 
 ## Prerequisites
 
@@ -16,6 +13,7 @@ Service to discover AWS resources using the AWS native API's and publish to Kafk
 ```console
 $ git clone https://github.com/openraven/aws-api-discovery
 ```
+
 ## Setup AWS permissions and services
 
 You will need read access in the AWS account for the services you'd like to discover.
@@ -43,3 +41,7 @@ Note: ESS can be replaced with any of the following profiles.
     RSH
     S3
     dynamoDb
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
